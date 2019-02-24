@@ -13,12 +13,22 @@
 #include <openssl/obj_mac.h>
 #include <openssl/rand.h>
 
+#include <openssl/opensslv.h>
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+typedef struct ECDSA_SIG_st {
+    BIGNUM *r;
+    BIGNUM *s;
+} ECDSA_SIG;
+#endif
+
 // anonymous namespace with local implementation code (OpenSSL interaction)
 namespace {
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
 {
+
     int ok = 0;
     BN_CTX *ctx = NULL;
     EC_POINT *pub_key = NULL;
@@ -153,13 +163,13 @@ public:
 
     void SetSecretBytes(const unsigned char vch[32]) {
         bool ret;
-        BIGNUM bn;
-        BN_init(&bn);
-        ret = BN_bin2bn(vch, 32, &bn);
+        BIGNUM *bn;
+        bn = BN_new();//BN_init(&bn);
+        ret = BN_bin2bn(vch, 32, bn);
         assert(ret);
-        ret = EC_KEY_regenerate_key(pkey, &bn);
+        ret = EC_KEY_regenerate_key(pkey, bn);
         assert(ret);
-        BN_clear_free(&bn);
+        BN_clear_free(bn);
     }
 
     void GetPrivKey(CPrivKey &privkey, bool fCompressed) {
@@ -215,9 +225,13 @@ public:
         BIGNUM *halforder = BN_CTX_get(ctx);
         EC_GROUP_get_order(group, order, ctx);
         BN_rshift1(halforder, order);
-        if (BN_cmp(sig->s, halforder) > 0) {
-            // enforce low S values, by negating the value (modulo the order) if above order/2.
-            BN_sub(sig->s, order, sig->s);
+        //if (BN_cmp(sig->s, halforder) > 0) {
+        BIGNUM *s = 0;
+        ECDSA_SIG_get0(sig, 0, (const BIGNUM **)&s);
+        if (BN_cmp(s, halforder) > 0) {
+        // enforce low S values, by negating the value (modulo the order) if above order/2.
+            //BN_sub(sig->s, order, sig->s);
+            BN_sub(s, order, s);
         }
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);
@@ -622,5 +636,3 @@ bool ECC_InitSanityCheck() {
     // TODO Is there more EC functionality that could be missing?
     return true;
 }
-
-
