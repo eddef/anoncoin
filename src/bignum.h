@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Nautiluscoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2013-2017 The Anoncoin Core developers
+// Distributed under the MIT software license, see the accompanying
 
-#ifndef BITCOIN_BIGNUM_H
-#define BITCOIN_BIGNUM_H
+#ifndef ANONCOIN_BIGNUM_H
+#define ANONCOIN_BIGNUM_H
 
 #include "serialize.h"
 #include "arith_uint256.h"
@@ -797,4 +797,3 @@ inline bool operator>(const CBigNum& a, const CBigNum& b)  { return (BN_cmp(&a, 
 inline std::ostream& operator<<(std::ostream &strm, const CBigNum &b) { return strm << b.ToString(10); }
 
 #endif
- 
